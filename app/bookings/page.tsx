@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { CalendarDays, CheckCircle2, LogIn, ReceiptText } from 'lucide-react';
 import { ApiError, apiRequest } from '@/lib/api-client';
@@ -33,7 +33,18 @@ type BookingRecord = {
   paidAt: string | null;
 };
 
-export default function BookingsPage() {
+function BookingsLoading() {
+  return (
+    <main className="container-shell py-16">
+      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-soft">
+        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700">Loading</p>
+        <h1 className="mt-2 text-3xl font-black text-slate-900">Loading your bookings...</h1>
+      </div>
+    </main>
+  );
+}
+
+function BookingsContent() {
   const searchParams = useSearchParams();
   const [bookings, setBookings] = useState<BookingRecord[]>([]);
   const [user, setUser] = useState<CurrentUser | null>(null);
@@ -75,14 +86,7 @@ export default function BookingsPage() {
   }, [bookings, confirmedBookingId]);
 
   if (loading) {
-    return (
-      <main className="container-shell py-16">
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-soft">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700">Loading</p>
-          <h1 className="mt-2 text-3xl font-black text-slate-900">Loading your bookings...</h1>
-        </div>
-      </main>
-    );
+    return <BookingsLoading />;
   }
 
   if (error) {
@@ -222,5 +226,13 @@ export default function BookingsPage() {
         </div>
       )}
     </main>
+  );
+}
+
+export default function BookingsPage() {
+  return (
+    <Suspense fallback={<BookingsLoading />}>
+      <BookingsContent />
+    </Suspense>
   );
 }
